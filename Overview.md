@@ -244,15 +244,58 @@ Designed to catch rare but distinct colors (e.g., bright red lipstick in a muted
 
 ## Current Status
 
-**Phases 1-5 complete.** Core functionality working:
-- Grid layout with 8 size options
+**Phases 1-5 complete.** App is fully usable:
+- Grid layout with 8 size options (8×1 to 32×4)
 - Full CRUD: add, edit, delete, duplicate, reorder (drag)
 - HSL sliders + color picker + hex input
-- Interpolation between colors (horizontal + vertical)
+- Interpolation between colors (+ buttons)
+- Multi-selection with keyboard shortcuts
 - Import: PNG strip, .hex file, k-means image extraction
-- Export: PNG, .swatches (Procreate), .ase (Adobe), .gpl (GIMP), .hex, JSON
+- Export: PNG, .gpl (GIMP), .hex, JSON — all working
+- Export: .swatches (Procreate), .ase (Adobe) — broken, needs debugging
 
-**Testing needed:** Procreate and ASE exports (rewritten, awaiting verification)
+**Repo:** https://github.com/luis-alva/palette-tool
+
+---
+
+## Next Session — Pending Items
+
+### High Priority
+1. **Fix Procreate .swatches export** — currently exports empty/invalid file
+2. **Fix Adobe ASE export** — getting "unsupported file" error
+
+### UI/UX — Completed
+- [x] **Cmd+D duplicate shortcut** — duplicates selected colors
+- [x] **Sort colors** — dropdown to sort by hue/saturation/lightness/luminance
+- [x] **Responsive color squares** — grid uses flexible sizing, expands to fill container
+- [x] **Drag to expand view** — container is resizable with drag handle
+- [x] **Standardize color picker** — HSL sliders are primary, system picker is secondary "Pick" button
+- [x] **Color name dictionary** — 1,186 names from Wikipedia, shows nearest match in edit popup
+
+### UI/UX — Fixes (Completed)
+- [x] **Fix Y-axis resize** — grid now uses `grid-template-rows: 1fr` for vertical sizing
+- [x] **Sort dropdown persist selection** — removed reset, shows current sort method
+- [x] **HSL/RGB toggle** — button with ⇄ arrows toggles between HSL and RGB sliders
+- [x] **Color preview opens picker** — click the large color rectangle to open system picker
+- [x] **Color name autocomplete** — editable field with dropdown (up to 5 suggestions)
+- [x] **Squares toggle** — checkbox top-right of grid to lock tiles to square aspect ratio (default: on)
+- [x] **Color picker position fix** — edit popup aligned left to give room for picker
+- [x] **Grid resize full width** — removed max-width limit, now uses viewport width
+- [x] **Consistent grid gaps** — squares mode uses auto row height, free mode uses 1fr
+- [x] **Interpolation buttons inside tiles** — buttons now positioned inside cells, not in gap
+
+### Bugs to Fix
+3. **Interpolation button position** — buttons should appear between two tiles (in the gap), not inside the tile. Currently showing on the tile itself. Need to position in gap while keeping proper z-index/overflow handling.
+
+### Core Features (Pending)
+4. **Outlier-aware color extraction** — catch rare distinct colors that k-means misses
+5. **Undo/redo** — track history stack
+
+### Nice to Have (Pending)
+5. **Drag to move selected group**
+6. **Batch HSL adjust** on multi-selection
+7. **Color count display**
+8. **Local storage save** — persist palette between sessions
 
 ---
 
@@ -262,6 +305,8 @@ Designed to catch rare but distinct colors (e.g., bright red lipstick in a muted
 Palette Tool/
 ├── Overview.md          # This file
 ├── index.html           # The app (single file)
+├── color-names.json     # 1,186 color names from Wikipedia (reference)
+├── color-names.min.json # Compact version (46KB, embedded in HTML)
 └── test-palettes/       # Sample palettes for testing
     └── splendor128.png
 ```
@@ -273,39 +318,40 @@ Palette Tool/
 - Keep it under 50KB total (excluding JSZip CDN)
 - Mobile-friendly (responsive grid)
 - No server needed — pure client-side
+- **Git commits:** Do not add Co-Authored-By lines or email addresses
 
 ---
 
-## Keyboard Shortcuts (Planned)
+## Keyboard Shortcuts
 
-| Key | Action |
-|-----|--------|
-| `Cmd/Ctrl + C` | Copy selected color(s) hex to clipboard |
-| `Cmd/Ctrl + V` | Paste hex from clipboard as new color |
-| `Delete / Backspace` | Delete selected color(s) |
-| `Cmd/Ctrl + D` | Duplicate selected |
-| `Cmd/Ctrl + Z` | Undo |
-| `Cmd/Ctrl + Shift + Z` | Redo |
-| `Escape` | Deselect / close popup |
-| `Cmd/Ctrl + A` | Select all |
+| Key | Action | Status |
+|-----|--------|--------|
+| `Cmd/Ctrl + C` | Copy selected color(s) hex to clipboard | ✓ |
+| `Cmd/Ctrl + V` | Paste hex from clipboard as new color | ✓ |
+| `Delete / Backspace` | Delete selected color(s) | ✓ |
+| `Cmd/Ctrl + A` | Select all | ✓ |
+| `Escape` | Deselect / close popup | ✓ |
+| `Cmd/Ctrl + D` | Duplicate selected | ✓ |
+| `Cmd/Ctrl + Z` | Undo | Pending |
+| `Cmd/Ctrl + Shift + Z` | Redo | Pending |
 
 ---
 
-## Multi-Selection (Planned)
+## Multi-Selection
 
-**Selection methods:**
-- `Click` — Select single color (deselects others)
-- `Shift + Click` — Range select (from last selected to clicked)
-- `Cmd/Ctrl + Click` — Toggle individual selection (add/remove from selection)
+**Selection methods (all implemented ✓):**
+- `Click` — Select single color, open edit popup
+- `Shift + Click` — Range select
+- `Cmd/Ctrl + Click` — Toggle add/remove from selection
 - `Cmd/Ctrl + A` — Select all
 
 **Multi-selection actions:**
-- Delete all selected
-- Copy all selected (as hex list)
-- Drag to move group
-- Adjust HSL (apply delta to all selected)
+- ✓ Delete all selected
+- ✓ Copy all selected (as hex list)
+- Pending: Drag to move group
+- Pending: Batch HSL adjust
 
-**UI indication:** Selected colors get a colored border/glow. Selection count shown in status area.
+**UI indication:** Selected colors get purple border/glow.
 
 ---
 
@@ -313,6 +359,12 @@ Palette Tool/
 
 *Add entries below, newest first*
 
+**2025-01-25** — Fixed: Consistent grid gaps (squares vs free mode), interpolation buttons now inside tiles
+**2025-01-25** — Fixed: Grid overflow on resize, squares toggle moved to top-right, removed max-width limit, edit popup positioned left for color picker room, HSL/RGB button now shows ⇄ arrows
+**2025-01-25** — Added: Squares toggle (locks tiles to square aspect ratio), fixed color picker position overlay
+**2025-01-25** — Fixed: Y-axis resize, sort dropdown persists, HSL/RGB toggle, color preview opens picker, color name autocomplete
+**2025-01-25** — Added Cmd+D duplicate, sort colors dropdown, responsive grid with resize handle, standardized color picker (HSL primary), color name dictionary (1,186 Wikipedia colors)
+**2025-01-24** — Git repo initialized, pushed to GitHub (luis-alva/palette-tool)
 **2025-01-24** — Phase 5 complete: Multi-selection, keyboard shortcuts (copy/paste/delete/select all), fixed grid spacing
 **2025-01-24** — Procreate export still broken, deprioritized to Phase 7
 **2025-01-24** — Rewrote Procreate/ASE exports (testing pending). Documented Phase 5-6 plans.
