@@ -220,8 +220,8 @@ Designed to catch rare but distinct colors (e.g., bright red lipstick in a muted
 - [x] Multi-delete
 - [x] Symmetrical grid spacing
 - [ ] Undo/redo
-- [ ] Local storage save
-- [ ] Responsive color squares (expand to fill space)
+- [x] Responsive color squares (expand to fill space)
+- [ ] Remove Overview file from Github. Unnecessary.
 
 ### Phase 6: Advanced Extraction
 - [ ] "Rare color" extraction mode — catch distinct outlier colors (e.g., bright red lipgloss in a muted photo) that k-means would average away
@@ -233,8 +233,9 @@ Designed to catch rare but distinct colors (e.g., bright red lipstick in a muted
 
 ### Future Ideas
 - [ ] Dark/light theme toggle
+- [ ] Local storage save
 - [ ] Color count display
-- [ ] Sort colors (by hue, saturation, lightness)
+- [x] Sort colors (by hue, saturation, lightness)
 - [ ] Color harmony suggestions
 - [ ] Import from URL (image or palette)
 - [ ] Shareable palette links
@@ -285,7 +286,7 @@ Designed to catch rare but distinct colors (e.g., bright red lipstick in a muted
 - [x] **Interpolation buttons inside tiles** — buttons now positioned inside cells, not in gap
 
 ### Bugs to Fix
-3. **Interpolation button position** — buttons should appear between two tiles (in the gap), not inside the tile. Currently showing on the tile itself. Need to position in gap while keeping proper z-index/overflow handling.
+~~3. **Interpolation button position** — FIXED: buttons now centered in the gap between tiles~~
 
 ### Core Features (Pending)
 4. **Outlier-aware color extraction** — catch rare distinct colors that k-means misses
