@@ -777,6 +777,16 @@
           </label>
           <span id="kDisplay" style="min-width: 30px;">8</span>
         </div>
+        <div style="display: flex; gap: 16px; margin-bottom: 12px;">
+          <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+            <input type="radio" name="extractMode" value="standard" checked>
+            Standard
+          </label>
+          <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+            <input type="radio" name="extractMode" value="outlier">
+            Outlier-aware
+          </label>
+        </div>
         <button class="primary" onclick="extractColors()" style="width: 100%;">Extract Colors</button>
       </div>
     </div>
@@ -803,13 +813,6 @@
             <span>.swatches for iPad</span>
           </div>
           <button onclick="exportSwatches()">Download</button>
-        </div>
-        <div class="export-option">
-          <div>
-            <strong>Adobe ASE</strong><br>
-            <span>Photoshop, Illustrator, Affinity</span>
-          </div>
-          <button onclick="exportASE()">Download</button>
         </div>
         <div class="export-option">
           <div>
@@ -1555,116 +1558,64 @@
     }
 
     async function exportSwatches() {
-      // Procreate .swatches format is a ZIP containing Swatches.json
-      const zip = new JSZip();
+      try {
+        // Procreate .swatches format is a ZIP containing Swatches.json
+        const zip = new JSZip();
 
-      // Convert colors to Procreate format (HSB with values 0-1)
-      const swatches = palette.colors.map(hex => {
-        const rgb = hexToRgb(hex);
-        // Convert RGB to HSB (HSV)
-        const r = rgb[0] / 255, g = rgb[1] / 255, b = rgb[2] / 255;
-        const max = Math.max(r, g, b), min = Math.min(r, g, b);
-        const d = max - min;
+        // Convert colors to Procreate format (HSB with values 0-1)
+        const swatches = palette.colors.map(hex => {
+          const rgb = hexToRgb(hex);
+          // Convert RGB to HSB (HSV)
+          const r = rgb[0] / 255, g = rgb[1] / 255, b = rgb[2] / 255;
+          const max = Math.max(r, g, b), min = Math.min(r, g, b);
+          const d = max - min;
 
-        let h = 0, s = 0, v = max;
+          let h = 0, s = 0, v = max;
 
-        if (max !== 0) {
-          s = d / max;
-        }
-
-        if (d !== 0) {
-          switch (max) {
-            case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
-            case g: h = ((b - r) / d + 2) / 6; break;
-            case b: h = ((r - g) / d + 4) / 6; break;
+          if (max !== 0) {
+            s = d / max;
           }
-        }
 
-        return {
-          hue: h,
-          saturation: s,
-          brightness: v,
-          alpha: 1,
-          colorSpace: 0
+          if (d !== 0) {
+            switch (max) {
+              case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+              case g: h = ((b - r) / d + 2) / 6; break;
+              case b: h = ((r - g) / d + 4) / 6; break;
+            }
+          }
+
+          return {
+            alpha: 1,
+            origin: 1,
+            colorSpace: 0,
+            colorModel: 0,
+            brightness: v,
+            components: [h, s, v],
+            version: "5.0",
+            saturation: s,
+            hue: h
+          };
+        });
+
+        const swatchesFile = {
+          name: palette.name,
+          swatches: swatches
         };
-      });
 
-      zip.file('Swatches.json', JSON.stringify(swatches));
+        console.log('Swatches data:', swatchesFile);
+        zip.file('Swatches.json', JSON.stringify(swatchesFile));
 
-      const blob = await zip.generateAsync({ type: 'blob' });
-      const link = document.createElement('a');
-      link.download = `${palette.name.replace(/\s+/g, '-').toLowerCase()}.swatches`;
-      link.href = URL.createObjectURL(blob);
-      link.click();
-    }
+        const blob = await zip.generateAsync({ type: 'blob' });
+        console.log('ZIP blob size:', blob.size);
 
-    function exportASE() {
-      // Adobe Swatch Exchange format (binary)
-      // Using ArrayBuffer and DataView for precise binary control
-
-      // Calculate total size needed
-      let totalSize = 12; // Header: 4 (sig) + 2 (major) + 2 (minor) + 4 (block count)
-
-      const colorBlocks = palette.colors.map((hex, i) => {
-        const rgb = hexToRgb(hex);
-        const name = hex.toUpperCase(); // Use hex as name
-        const nameLen = name.length + 1; // Including null terminator
-        // Block: 2 (type) + 4 (length) + 2 (name len) + nameLen*2 (UTF-16BE) + 4 (color space) + 12 (RGB) + 2 (color type)
-        const blockDataLen = 2 + (nameLen * 2) + 4 + 12 + 2;
-        totalSize += 2 + 4 + blockDataLen; // type + length field + data
-        return { hex, rgb, name, nameLen, blockDataLen };
-      });
-
-      const buffer = new ArrayBuffer(totalSize);
-      const view = new DataView(buffer);
-      let offset = 0;
-
-      // Write helper
-      const writeUint8 = (val) => { view.setUint8(offset++, val); };
-      const writeUint16 = (val) => { view.setUint16(offset, val, false); offset += 2; };
-      const writeUint32 = (val) => { view.setUint32(offset, val, false); offset += 4; };
-      const writeFloat32 = (val) => { view.setFloat32(offset, val, false); offset += 4; };
-
-      // Header
-      writeUint8(0x41); // A
-      writeUint8(0x53); // S
-      writeUint8(0x45); // E
-      writeUint8(0x46); // F
-      writeUint16(1);   // Version major
-      writeUint16(0);   // Version minor
-      writeUint32(palette.colors.length); // Block count
-
-      // Color blocks
-      colorBlocks.forEach(({ rgb, name, nameLen, blockDataLen }) => {
-        // Block type: 0x0001 = color entry
-        writeUint16(0x0001);
-        // Block length (not including type and length fields themselves)
-        writeUint32(blockDataLen);
-        // Name length in UTF-16 code units (including null)
-        writeUint16(nameLen);
-        // Name in UTF-16BE
-        for (let i = 0; i < name.length; i++) {
-          writeUint16(name.charCodeAt(i));
-        }
-        writeUint16(0); // Null terminator
-        // Color space: "RGB " (4 bytes)
-        writeUint8(0x52); // R
-        writeUint8(0x47); // G
-        writeUint8(0x42); // B
-        writeUint8(0x20); // space
-        // RGB as floats 0-1
-        writeFloat32(rgb[0] / 255);
-        writeFloat32(rgb[1] / 255);
-        writeFloat32(rgb[2] / 255);
-        // Color type: 2 = Normal
-        writeUint16(2);
-      });
-
-      const blob = new Blob([buffer], { type: 'application/octet-stream' });
-      const link = document.createElement('a');
-      link.download = `${palette.name.replace(/\s+/g, '-').toLowerCase()}.ase`;
-      link.href = URL.createObjectURL(blob);
-      link.click();
+        const link = document.createElement('a');
+        link.download = `${palette.name.replace(/\s+/g, '-').toLowerCase()}.swatches`;
+        link.href = URL.createObjectURL(blob);
+        link.click();
+      } catch (err) {
+        console.error('Export failed:', err);
+        alert('Export failed: ' + err.message);
+      }
     }
 
     // Import functions
@@ -1776,7 +1727,11 @@
       if (!extractImageData) return;
 
       const k = parseInt(document.getElementById('kValue').value);
-      const colors = kMeansColors(extractImageData, k);
+      const mode = document.querySelector('input[name="extractMode"]:checked').value;
+
+      const colors = mode === 'outlier'
+        ? kMeansColorsOutlierAware(extractImageData, k)
+        : kMeansColors(extractImageData, k);
 
       palette.colors = colors;
       renderGrid();
@@ -1872,6 +1827,149 @@
       const dg = c1[1] - c2[1];
       const db = c1[2] - c2[2];
       return Math.sqrt(dr * dr + dg * dg + db * db);
+    }
+
+    // Outlier-aware k-means clustering
+    function kMeansColorsOutlierAware(imageData, k) {
+      const pixels = [];
+      const data = imageData.data;
+
+      // Sample every Nth pixel for performance
+      const step = Math.max(1, Math.floor(data.length / 4 / 10000));
+
+      for (let i = 0; i < data.length; i += 4 * step) {
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+        const a = data[i + 3];
+
+        if (a < 128) continue;
+        pixels.push([r, g, b]);
+      }
+
+      if (pixels.length === 0) return ['#888888'];
+
+      // Initialize centroids randomly
+      let centroids = [];
+      const shuffled = pixels.slice().sort(() => Math.random() - 0.5);
+      for (let i = 0; i < Math.min(k, shuffled.length); i++) {
+        centroids.push(shuffled[i].slice());
+      }
+
+      // Run k-means iterations
+      const maxIterations = 20;
+      let clusters = [];
+
+      for (let iter = 0; iter < maxIterations; iter++) {
+        clusters = Array.from({ length: k }, () => []);
+
+        for (const pixel of pixels) {
+          let minDist = Infinity;
+          let nearest = 0;
+
+          for (let c = 0; c < centroids.length; c++) {
+            const dist = colorDistance(pixel, centroids[c]);
+            if (dist < minDist) {
+              minDist = dist;
+              nearest = c;
+            }
+          }
+
+          clusters[nearest].push(pixel);
+        }
+
+        let converged = true;
+        for (let c = 0; c < centroids.length; c++) {
+          if (clusters[c].length === 0) continue;
+
+          const newCentroid = [0, 0, 0];
+          for (const pixel of clusters[c]) {
+            newCentroid[0] += pixel[0];
+            newCentroid[1] += pixel[1];
+            newCentroid[2] += pixel[2];
+          }
+          newCentroid[0] = Math.round(newCentroid[0] / clusters[c].length);
+          newCentroid[1] = Math.round(newCentroid[1] / clusters[c].length);
+          newCentroid[2] = Math.round(newCentroid[2] / clusters[c].length);
+
+          if (colorDistance(centroids[c], newCentroid) > 1) {
+            converged = false;
+          }
+          centroids[c] = newCentroid;
+        }
+
+        if (converged) break;
+      }
+
+      // Find outliers: pixels far from their nearest centroid
+      const outlierThreshold = 80; // RGB distance threshold
+      const outliers = [];
+
+      for (const pixel of pixels) {
+        let minDist = Infinity;
+        for (const centroid of centroids) {
+          const dist = colorDistance(pixel, centroid);
+          if (dist < minDist) minDist = dist;
+        }
+        if (minDist > outlierThreshold) {
+          outliers.push({ pixel, dist: minDist });
+        }
+      }
+
+      // If we have outliers, replace similar clusters
+      if (outliers.length > 0) {
+        // Sort outliers by distance (most outlier-y first)
+        outliers.sort((a, b) => b.dist - a.dist);
+
+        // Get unique outlier colors (cluster them loosely)
+        const uniqueOutliers = [];
+        for (const o of outliers) {
+          let isUnique = true;
+          for (const existing of uniqueOutliers) {
+            if (colorDistance(o.pixel, existing) < 50) {
+              isUnique = false;
+              break;
+            }
+          }
+          if (isUnique) {
+            uniqueOutliers.push(o.pixel);
+            if (uniqueOutliers.length >= Math.floor(k / 2)) break; // Don't replace more than half
+          }
+        }
+
+        // For each unique outlier, find and replace the most redundant cluster
+        for (const outlierColor of uniqueOutliers) {
+          // Find the two most similar centroids
+          let minSimilarity = Infinity;
+          let similar1 = -1, similar2 = -1;
+
+          for (let i = 0; i < centroids.length; i++) {
+            for (let j = i + 1; j < centroids.length; j++) {
+              const dist = colorDistance(centroids[i], centroids[j]);
+              if (dist < minSimilarity) {
+                minSimilarity = dist;
+                similar1 = i;
+                similar2 = j;
+              }
+            }
+          }
+
+          // If we found similar centroids, replace the smaller cluster
+          if (similar1 >= 0 && similar2 >= 0) {
+            const replaceIdx = clusters[similar1].length <= clusters[similar2].length ? similar1 : similar2;
+            centroids[replaceIdx] = outlierColor.slice();
+          }
+        }
+      }
+
+      // Sort by luminance and convert to hex
+      centroids.sort((a, b) => {
+        const lumA = 0.299 * a[0] + 0.587 * a[1] + 0.114 * a[2];
+        const lumB = 0.299 * b[0] + 0.587 * b[1] + 0.114 * b[2];
+        return lumA - lumB;
+      });
+
+      return centroids.map(c => rgbToHex(c[0], c[1], c[2]));
     }
 
     function rgbToHex(r, g, b) {

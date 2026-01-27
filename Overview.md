@@ -224,12 +224,12 @@ Designed to catch rare but distinct colors (e.g., bright red lipstick in a muted
 - [ ] Remove Overview file from Github. Unnecessary.
 
 ### Phase 6: Advanced Extraction
-- [ ] "Rare color" extraction mode — catch distinct outlier colors (e.g., bright red lipgloss in a muted photo) that k-means would average away
-- [ ] Extraction algorithm options: K-means (current) vs Outlier-aware
+- [x] "Rare color" extraction mode — catch distinct outlier colors (e.g., bright red lipgloss in a muted photo) that k-means would average away
+- [x] Extraction algorithm options: K-means (current) vs Outlier-aware
 
 ### Phase 7: Export Fixes
-- [ ] Debug & fix Procreate .swatches export
-- [ ] Debug & fix Adobe ASE export
+- [x] Debug & fix Procreate .swatches export
+- [x] ~~Debug & fix Adobe ASE export~~ — Removed (not needed)
 
 ### Future Ideas
 - [ ] Dark/light theme toggle
@@ -240,20 +240,24 @@ Designed to catch rare but distinct colors (e.g., bright red lipstick in a muted
 - [ ] Import from URL (image or palette)
 - [ ] Shareable palette links
 - [ ] Order palette based on tonality
+- [ ] Row/column hover controls:
+  - Bottom: button to add new row of empty tiles
+  - Right: button to add new column of empty tiles
+  - Top: small × per column to delete that column
+  - Left: small × per row to delete that row
 
 ---
 
 ## Current Status
 
-**Phases 1-5 complete.** App is fully usable:
+**Phases 1-7 complete.** App is fully usable:
 - Grid layout with 8 size options (8×1 to 32×4)
 - Full CRUD: add, edit, delete, duplicate, reorder (drag)
 - HSL sliders + color picker + hex input
 - Interpolation between colors (+ buttons)
 - Multi-selection with keyboard shortcuts
-- Import: PNG strip, .hex file, k-means image extraction
-- Export: PNG, .gpl (GIMP), .hex, JSON — all working
-- Export: .swatches (Procreate), .ase (Adobe) — broken, needs debugging
+- Import: PNG strip, .hex file, k-means image extraction (standard + outlier-aware modes)
+- Export: PNG, .gpl (GIMP), .hex, JSON, .swatches (Procreate) — all working
 
 **Repo:** https://github.com/luis-alva/palette-tool
 
@@ -262,8 +266,8 @@ Designed to catch rare but distinct colors (e.g., bright red lipstick in a muted
 ## Next Session — Pending Items
 
 ### High Priority
-1. **Fix Procreate .swatches export** — currently exports empty/invalid file
-2. **Fix Adobe ASE export** — getting "unsupported file" error
+1. ~~**Fix Procreate .swatches export**~~ — Done!
+2. ~~**Fix Adobe ASE export**~~ — Removed (not needed)
 
 ### UI/UX — Completed
 - [x] **Cmd+D duplicate shortcut** — duplicates selected colors
@@ -289,7 +293,7 @@ Designed to catch rare but distinct colors (e.g., bright red lipstick in a muted
 ~~3. **Interpolation button position** — FIXED: buttons now centered in the gap between tiles~~
 
 ### Core Features (Pending)
-4. **Outlier-aware color extraction** — catch rare distinct colors that k-means misses
+4. ~~**Outlier-aware color extraction**~~ — Done!
 5. **Undo/redo** — track history stack
 
 ### Nice to Have (Pending)
@@ -360,6 +364,7 @@ Palette Tool/
 
 *Add entries below, newest first*
 
+**2025-01-27** — Fixed Procreate .swatches export (correct JSON structure), removed broken ASE export, added outlier-aware color extraction mode
 **2025-01-25** — Fixed: Consistent grid gaps (squares vs free mode), interpolation buttons now inside tiles
 **2025-01-25** — Fixed: Grid overflow on resize, squares toggle moved to top-right, removed max-width limit, edit popup positioned left for color picker room, HSL/RGB button now shows ⇄ arrows
 **2025-01-25** — Added: Squares toggle (locks tiles to square aspect ratio), fixed color picker position overlay
