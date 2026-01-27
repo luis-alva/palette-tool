@@ -155,7 +155,97 @@
       gap: 8px;
       position: relative;
       width: 100%;
+    }
+
+    /* Grid area wrapper for positioning controls */
+    .grid-area {
+      position: relative;
+      display: inline-block;
       margin-top: 24px;
+    }
+
+    /* Grid edge controls */
+    .grid-controls {
+      position: absolute;
+      display: flex;
+      opacity: 0;
+      transition: opacity 0.15s;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    .grid-container:hover .grid-controls {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .grid-controls.top {
+      bottom: 100%;
+      left: 0;
+      right: 0;
+      height: 16px;
+      margin-bottom: 2px;
+    }
+
+    .grid-controls.bottom {
+      top: 100%;
+      left: 0;
+      right: 0;
+      height: 16px;
+      margin-top: 2px;
+      justify-content: center;
+    }
+
+    .grid-controls.left {
+      right: 100%;
+      top: 0;
+      bottom: 0;
+      width: 16px;
+      flex-direction: column;
+      margin-right: 2px;
+    }
+
+    .grid-controls.right {
+      left: 100%;
+      top: 0;
+      bottom: 0;
+      width: 16px;
+      flex-direction: column;
+      margin-left: 2px;
+      justify-content: center;
+    }
+
+    .grid-ctrl-btn {
+      background: transparent;
+      border: none;
+      color: #666;
+      cursor: pointer;
+      font-size: 12px;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: color 0.15s;
+      flex: 1;
+      min-width: 14px;
+      min-height: 14px;
+    }
+
+    .grid-ctrl-btn:hover {
+      color: #fff;
+    }
+
+    .grid-ctrl-btn.delete:hover {
+      color: #e55;
+    }
+
+    .grid-ctrl-btn.add {
+      color: #555;
+      font-size: 14px;
+    }
+
+    .grid-ctrl-btn.add:hover {
+      color: #8f8;
     }
 
     .grid-cell-wrapper {
@@ -225,7 +315,7 @@
     }
 
     .color-cell:hover {
-      transform: scale(1.08);
+      transform: scale(1.02);
       border-color: #fff;
     }
 
@@ -661,7 +751,13 @@
         <input type="checkbox" id="squaresToggle" checked>
         <span>Squares</span>
       </label>
-      <div class="color-grid" id="colorGrid"></div>
+      <div class="grid-area" id="gridArea">
+        <div class="grid-controls top" id="topControls"></div>
+        <div class="grid-controls left" id="leftControls"></div>
+        <div class="color-grid" id="colorGrid"></div>
+        <div class="grid-controls right" id="rightControls"></div>
+        <div class="grid-controls bottom" id="bottomControls"></div>
+      </div>
     </div>
   </div>
 
@@ -1101,11 +1197,97 @@
       gridRows = rows;
     }
 
+    function addRow() {
+      gridRows++;
+      renderGrid();
+    }
+
+    function addColumn() {
+      gridCols++;
+      renderGrid();
+    }
+
+    function deleteRow(rowIndex) {
+      if (gridRows <= 1) return;
+      const startIdx = rowIndex * gridCols;
+      const endIdx = startIdx + gridCols;
+      // Remove colors in this row (if any exist)
+      const colorsToRemove = Math.min(endIdx, palette.colors.length) - Math.min(startIdx, palette.colors.length);
+      if (colorsToRemove > 0 && startIdx < palette.colors.length) {
+        palette.colors.splice(startIdx, Math.min(gridCols, palette.colors.length - startIdx));
+      }
+      gridRows--;
+      renderGrid();
+    }
+
+    function deleteColumn(colIndex) {
+      if (gridCols <= 1) return;
+      // Remove colors at this column index from each row (bottom to top to preserve indices)
+      for (let row = gridRows - 1; row >= 0; row--) {
+        const idx = row * gridCols + colIndex;
+        if (idx < palette.colors.length) {
+          palette.colors.splice(idx, 1);
+        }
+      }
+      gridCols--;
+      renderGrid();
+    }
+
+    function renderGridControls() {
+      const topControls = document.getElementById('topControls');
+      const leftControls = document.getElementById('leftControls');
+      const rightControls = document.getElementById('rightControls');
+      const bottomControls = document.getElementById('bottomControls');
+
+      // Clear existing controls
+      topControls.innerHTML = '';
+      leftControls.innerHTML = '';
+      rightControls.innerHTML = '';
+      bottomControls.innerHTML = '';
+
+      // Create delete buttons for each column (top)
+      for (let col = 0; col < gridCols; col++) {
+        const btn = document.createElement('button');
+        btn.className = 'grid-ctrl-btn delete';
+        btn.innerHTML = '×';
+        btn.title = `Delete column ${col + 1}`;
+        btn.onclick = () => deleteColumn(col);
+        topControls.appendChild(btn);
+      }
+
+      // Create delete buttons for each row (left)
+      for (let row = 0; row < gridRows; row++) {
+        const btn = document.createElement('button');
+        btn.className = 'grid-ctrl-btn delete';
+        btn.innerHTML = '×';
+        btn.title = `Delete row ${row + 1}`;
+        btn.onclick = () => deleteRow(row);
+        leftControls.appendChild(btn);
+      }
+
+      // Add column button (right)
+      const addColBtn = document.createElement('button');
+      addColBtn.className = 'grid-ctrl-btn add';
+      addColBtn.innerHTML = '+';
+      addColBtn.title = 'Add column';
+      addColBtn.onclick = addColumn;
+      rightControls.appendChild(addColBtn);
+
+      // Add row button (bottom)
+      const addRowBtn = document.createElement('button');
+      addRowBtn.className = 'grid-ctrl-btn add';
+      addRowBtn.innerHTML = '+';
+      addRowBtn.title = 'Add row';
+      addRowBtn.onclick = addRow;
+      bottomControls.appendChild(addRowBtn);
+    }
+
     function renderGrid() {
       colorGrid.innerHTML = '';
 
       const isSquares = document.getElementById('squaresToggle').checked;
       const container = document.getElementById('gridContainer');
+      const gridArea = document.getElementById('gridArea');
       const gap = 8; // matches CSS gap
 
       if (isSquares) {
@@ -1117,15 +1299,28 @@
         const maxCellHeight = (availableHeight - gap * (gridRows - 1)) / gridRows;
         const cellSize = Math.max(24, Math.min(maxCellWidth, maxCellHeight)); // min 24px
 
+        gridArea.style.display = 'inline-block';
+        gridArea.style.width = 'auto';
+        gridArea.style.height = 'auto';
         colorGrid.style.gridTemplateColumns = `repeat(${gridCols}, ${cellSize}px)`;
         colorGrid.style.gridTemplateRows = `repeat(${gridRows}, ${cellSize}px)`;
         colorGrid.style.height = 'auto';
       } else {
         // Free mode: fill container with flexible cells
+        gridArea.style.display = 'block';
+        gridArea.style.width = '100%';
+        gridArea.style.height = 'calc(100% - 24px)';
         colorGrid.style.gridTemplateColumns = `repeat(${gridCols}, 1fr)`;
         colorGrid.style.gridTemplateRows = `repeat(${gridRows}, 1fr)`;
-        colorGrid.style.height = 'calc(100% - 24px)';
+        colorGrid.style.height = '100%';
       }
+
+      // Set container min-size based on grid dimensions (min cell size = 24px)
+      const minCellSize = 24;
+      const minGridWidth = gridCols * minCellSize + (gridCols - 1) * gap;
+      const minGridHeight = gridRows * minCellSize + (gridRows - 1) * gap;
+      container.style.minWidth = (minGridWidth + 40) + 'px'; // 40px = padding
+      container.style.minHeight = (minGridHeight + 72) + 'px'; // 72px = padding + margin
 
       const totalCells = gridCols * gridRows;
 
@@ -1220,6 +1415,8 @@
         wrapper.appendChild(cell);
         colorGrid.appendChild(wrapper);
       }
+
+      renderGridControls();
     }
 
     function handleColorClick(index, e) {

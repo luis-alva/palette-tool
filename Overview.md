@@ -240,7 +240,7 @@ Designed to catch rare but distinct colors (e.g., bright red lipstick in a muted
 - [ ] Import from URL (image or palette)
 - [ ] Shareable palette links
 - [ ] Order palette based on tonality
-- [ ] Row/column hover controls:
+- [x] Row/column hover controls:
   - Bottom: button to add new row of empty tiles
   - Right: button to add new column of empty tiles
   - Top: small × per column to delete that column
@@ -364,7 +364,7 @@ Palette Tool/
 
 *Add entries below, newest first*
 
-**2025-01-27** — Fixed Procreate .swatches export (correct JSON structure), removed broken ASE export, added outlier-aware color extraction mode
+**2025-01-27** — Fixed Procreate export, added outlier-aware extraction, added row/column hover controls, reduced hover animation, dynamic resize constraints
 **2025-01-25** — Fixed: Consistent grid gaps (squares vs free mode), interpolation buttons now inside tiles
 **2025-01-25** — Fixed: Grid overflow on resize, squares toggle moved to top-right, removed max-width limit, edit popup positioned left for color picker room, HSL/RGB button now shows ⇄ arrows
 **2025-01-25** — Added: Squares toggle (locks tiles to square aspect ratio), fixed color picker position overlay
