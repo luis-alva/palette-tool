@@ -2,6 +2,8 @@
 
 Lightweight web app for creating, editing, and exporting color palettes. Single HTML file, no build step, no framework.
 
+**Try it here:** [luis-alva.github.io/palette-tool](https://luis-alva.github.io/palette-tool/)
+
 ![Palette grid view](screenshots/palette_tool_1.png)
 
 | Edit colors with named autocomplete | Import & extract from images | Interpolate between colors |
@@ -78,3 +80,7 @@ To generate the minified `index.html` for deployment:
 npx html-minifier-terser palette-tool.html -o index.html \
   --collapse-whitespace --minify-css true --minify-js true
 ```
+
+## License
+
+[GPL-3.0](LICENSE)
