@@ -2,6 +2,12 @@
 
 Lightweight web app for creating, editing, and exporting color palettes. Single HTML file, no build step, no framework.
 
+![Palette grid view](screenshots/palette_tool_1.png)
+
+| Edit colors with named autocomplete | Import & extract from images | Interpolate between colors |
+|:---:|:---:|:---:|
+| ![Edit](screenshots/palette_tool_2.png) | ![Import](screenshots/palette_tool_3.png) | ![Interpolation](screenshots/palette_tool_4.png) |
+
 ## Features
 
 **Create & Edit**
@@ -40,7 +46,9 @@ Lightweight web app for creating, editing, and exporting color palettes. Single 
 
 ## Usage
 
-Open `index.html` in a browser. No server needed.
+Open `palette-tool.html` in a browser. No server needed.
+
+Or visit the hosted version at [luis-alva.github.io/palette-tool](https://luis-alva.github.io/palette-tool/).
 
 ## Keyboard Shortcuts
 
@@ -56,7 +64,17 @@ Open `index.html` in a browser. No server needed.
 
 ## Technical Notes
 
-- ~102KB single HTML file (37KB is embedded color dictionary)
+- Single HTML file (~102KB source, 37KB is embedded color dictionary)
 - Vanilla JS, no dependencies except JSZip (CDN, for .swatches export)
 - Interpolation uses HSL with chroma damping for distant hues
 - Color extraction: k-means clustering with optional outlier-aware mode
+- `palette-tool.html` is the source; `index.html` is the minified build for hosting
+
+## Build
+
+To generate the minified `index.html` for deployment:
+
+```bash
+npx html-minifier-terser palette-tool.html -o index.html \
+  --collapse-whitespace --minify-css true --minify-js true
+```
